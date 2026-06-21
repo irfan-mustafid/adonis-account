@@ -6,7 +6,7 @@ import crypto from 'node:crypto'
 
 export default class AuthController {
   async create({ inertia }: HttpContext) {
-    return inertia.render('auth/login', {})
+    return inertia.render('auth/pages/login', {})
   }
 
   async login({ auth, request, response, session }: HttpContext) {
