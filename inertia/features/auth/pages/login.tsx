@@ -1,6 +1,30 @@
-import { Form } from '@adonisjs/inertia/react'
+import { Form } from 'antd'
+import axios from 'axios'
+import InputText from '~/layouts/components/form/InputText'
+import { useRequest } from 'ahooks'
+import InputPassword from '~/layouts/components/form/InputPassword'
+import ButtonElem from '~/layouts/components/element/ButtonElem'
+import { requestDefaultConfig } from '~/lib/helpers'
+import { router } from '@inertiajs/react'
+interface FormFild {
+  username: string
+  password: string
+}
+const Login = () => {
+  const [form] = Form.useForm<FormFild>()
 
-export default function Login() {
+  const { run: handleSumbit } = useRequest(
+    (value: FormFild) => {
+      return axios.post('/login', value)
+    },
+    {
+      ...requestDefaultConfig,
+      onSuccess: () => {
+        router.visit('/home')
+      },
+    }
+  )
+
   return (
     <div className="form-container">
       <div>
@@ -9,42 +33,21 @@ export default function Login() {
       </div>
 
       <div>
-        <Form route="auth.authenticate">
-          {({ errors }) => (
-            <>
-              <div>
-                <label htmlFor="username">Username</label>
-                <input
-                  type="text"
-                  name="username"
-                  id="username"
-                  autoComplete="username"
-                  data-invalid={errors.username ? 'true' : undefined}
-                />
-                {errors.username && <div>{errors.username}</div>}
-              </div>
-
-              <div>
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  autoComplete="current-password"
-                  data-invalid={errors.password ? 'true' : undefined}
-                />
-                {errors.password && <div>{errors.password}</div>}
-              </div>
-
-              <div>
-                <button type="submit" className="button">
-                  Login
-                </button>
-              </div>
-            </>
-          )}
+        <Form layout="vertical" form={form} onFinish={handleSumbit}>
+          <InputText<FormFild> name="username" label="User Name" placeholder="User Name" required />
+          <InputPassword<FormFild>
+            name="password"
+            label="Password"
+            placeholder="Masukkan Password"
+            required
+          />
+          <ButtonElem className="w-full" variant="primary" htmlType="submit">
+            Login
+          </ButtonElem>
         </Form>
       </div>
     </div>
   )
 }
+
+export default Login

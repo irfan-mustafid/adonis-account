@@ -14,33 +14,30 @@ export default class AuthController {
     const password = request.input('password')
 
     if (!username || !password) {
-      return response.redirect().toRoute('auth.login')
+      return response.badRequest({ message: 'Username dan password wajib diisi' })
     }
+
     try {
       const user = await User.findBy('username', username)
+      console.log(user)
 
       if (!user) {
         throw new Error('User not found')
       }
 
-      // Check if password is MD5 (32 char hex)
       const isMD5 = user.password.length === 32 && /^[a-f0-9]+$/.test(user.password)
-
       let isPasswordValid = false
 
       if (isMD5) {
-        // Verify legacy MD5 password
         const md5Hash = crypto.createHash('md5').update(password).digest('hex')
         isPasswordValid = md5Hash === user.password
 
         if (isPasswordValid) {
-          // Migrate to secure scrypt hash
           user.password = await hash.make(password)
           await user.save()
           logger.info({ username: user.username }, 'Migrated password from MD5 to scrypt')
         }
       } else {
-        // Verify with default scrypt
         const userVerified = await User.verifyCredentials(username, password)
         isPasswordValid = !!userVerified
       }
@@ -50,13 +47,13 @@ export default class AuthController {
       }
 
       await auth.use('web').login(user)
-      return response.redirect().toRoute('home')
+
+      // balikin JSON biasa, bukan redirect
+      return response.ok({ message: 'Login berhasil' })
     } catch (error) {
       logger.warn({ username, error: (error as Error).message }, 'Failed login attempt')
-      session.flash('errors', {
-        username: 'Invalid user credentials',
-      })
-      return response.redirect().back()
+
+      return response.unauthorized({ message: 'Username atau password salah' })
     }
   }
 

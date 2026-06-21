@@ -16,6 +16,8 @@
 |
 */
 
+import '@poppinss/ts-exec'
+
 /**
  * Import ace console entrypoint
  */
